@@ -161,35 +161,74 @@ export function fishToData(f) {
 const clampF = (v, a, b) => Math.max(a, Math.min(b, v))
 export const FIGHT = { HOLD: 0, RUN: 1, JUMP: 2, DIVE: 3, THRASH: 4 }
 
+// Per-archetype fight signatures: behaviour weights [hold,run,jump,dive,thrash]
+// plus force/duration multipliers, so each species FIGHTS like itself instead of
+// every fish sharing one profile. (Mapped centrally to avoid touching all of
+// SPECIES; defaults to 'bass' if a species isn't listed.)
+const FIGHT_PROFILES = {
+  panfish: { hold: 0.25, run: 0.15, jump: 0.0, dive: 0.15, thrash: 0.45, force: 0.6, dur: 0.8 }, // quick flutter, no runs
+  bass: { hold: 0.15, run: 0.3, jump: 0.22, dive: 0.13, thrash: 0.2, force: 1.0, dur: 1.0 }, // jump + head-shake
+  predator: { hold: 0.08, run: 0.26, jump: 0.14, dive: 0.18, thrash: 0.34, force: 1.15, dur: 1.0 }, // pike/muskie violent thrash
+  bulldog: { hold: 0.27, run: 0.18, jump: 0.0, dive: 0.45, thrash: 0.1, force: 1.2, dur: 1.25 }, // catfish sound & sulk deep
+  runner: { hold: 0.25, run: 0.5, jump: 0.0, dive: 0.18, thrash: 0.07, force: 1.15, dur: 1.4 }, // carp long screaming runs
+  darter: { hold: 0.16, run: 0.42, jump: 0.12, dive: 0.12, thrash: 0.18, force: 0.9, dur: 0.7 }, // trout lively darts
+  dogged: { hold: 0.22, run: 0.24, jump: 0.05, dive: 0.34, thrash: 0.15, force: 1.0, dur: 1.1 }, // walleye bore deep
+}
+const ARCHETYPE = {
+  bluegill: 'panfish', pumpkinseed: 'panfish', yellow_perch: 'panfish', crappie: 'panfish',
+  brown_bullhead: 'bulldog', channel_catfish: 'bulldog',
+  largemouth_pond: 'bass', largemouth_bass: 'bass', smallmouth_bass: 'bass',
+  common_carp: 'runner',
+  rainbow_trout: 'darter', rainbow_trout_river: 'darter', brook_trout: 'darter', brown_trout: 'darter',
+  walleye: 'dogged', walleye_river: 'dogged',
+  northern_pike: 'predator', muskie: 'predator',
+}
+const profileFor = (sp) => FIGHT_PROFILES[ARCHETYPE[sp.id]] || FIGHT_PROFILES.bass
+const FIGHT_KEYS = [FIGHT.HOLD, FIGHT.RUN, FIGHT.JUMP, FIGHT.DIVE, FIGHT.THRASH]
+
 function pickBehavior(sp, stamina, pressure = 0) {
   if (stamina < 0.18) return Math.random() < 0.7 ? FIGHT.HOLD : FIGHT.THRASH
-  const r = Math.random()
-  const jumpy = sp.strength
-  const run = 0.28 + pressure * 0.32 // horsing it (high tension) provokes a run
-  if (r < run) return FIGHT.RUN
-  if (r < run + (0.16 + pressure * 0.12) * jumpy) return FIGHT.JUMP
-  if (r < run + 0.34) return FIGHT.DIVE // slack lets it dive for cover
-  if (r < run + 0.52) return FIGHT.THRASH
+  const pf = profileFor(sp)
+  // weight by the species profile; pulling hard provokes runs; only jumpy fish
+  // (profile jump > 0) leave the water, scaled by their strength.
+  const w = {
+    [FIGHT.HOLD]: pf.hold,
+    [FIGHT.RUN]: pf.run + pressure * 0.3,
+    [FIGHT.JUMP]: pf.jump * (0.6 + sp.strength * 0.8),
+    [FIGHT.DIVE]: pf.dive,
+    [FIGHT.THRASH]: pf.thrash,
+  }
+  let tot = 0
+  for (const k of FIGHT_KEYS) tot += w[k]
+  let r = Math.random() * tot
+  for (const k of FIGHT_KEYS) {
+    r -= w[k]
+    if (r <= 0) return k
+  }
   return FIGHT.HOLD
 }
-function behaviorDuration(b, stamina) {
+function behaviorDuration(b, stamina, sp) {
+  const dur = profileFor(sp).dur
   switch (b) {
-    case FIGHT.RUN: return (0.8 + Math.random() * 1.5) * (0.5 + stamina * 0.5)
+    case FIGHT.RUN: return (0.8 + Math.random() * 1.5) * (0.5 + stamina * 0.5) * dur
     case FIGHT.JUMP: return 0.85
-    case FIGHT.DIVE: return 1.0 + Math.random() * 1.4
-    case FIGHT.THRASH: return 0.5 + Math.random() * 0.6
-    default: return 1.0 + Math.random() * 1.6
+    case FIGHT.DIVE: return (1.0 + Math.random() * 1.4) * dur
+    case FIGHT.THRASH: return (0.5 + Math.random() * 0.6) * dur
+    default: return (1.0 + Math.random() * 1.6) * dur
   }
 }
 function behaviorForce(b, sp) {
   const s = sp.strength
+  const force = profileFor(sp).force
+  let base
   switch (b) {
-    case FIGHT.RUN: return 0.6 + s * 0.5
-    case FIGHT.JUMP: return 0.45 + s * 0.4
-    case FIGHT.DIVE: return 0.5 + s * 0.5
-    case FIGHT.THRASH: return 0.3 + s * 0.3
-    default: return 0.14 + s * 0.16
+    case FIGHT.RUN: base = 0.6 + s * 0.5; break
+    case FIGHT.JUMP: base = 0.45 + s * 0.4; break
+    case FIGHT.DIVE: base = 0.5 + s * 0.5; break
+    case FIGHT.THRASH: base = 0.3 + s * 0.3; break
+    default: base = 0.14 + s * 0.16
   }
+  return base * force
 }
 
 export function startFight(playerX, playerZ) {
@@ -220,7 +259,7 @@ export function updateFight(dt, t, playerX, playerZ, reeling, pumping, rodLoad, 
   fight.timer -= dt
   if (fight.timer <= 0) {
     fight.behavior = pickBehavior(sp, fight.stamina, pressure)
-    fight.timer = behaviorDuration(fight.behavior, fight.stamina) * (pressure > 0.7 && fight.behavior === FIGHT.HOLD ? 0.4 : 1)
+    fight.timer = behaviorDuration(fight.behavior, fight.stamina, sp) * (pressure > 0.7 && fight.behavior === FIGHT.HOLD ? 0.4 : 1)
     if (fight.behavior === FIGHT.RUN) {
       const ang = Math.atan2(f.pos.z - playerZ, f.pos.x - playerX) + (Math.random() - 0.5) * 1.7
       const spd = (1.6 + sp.strength * 2.6) * (0.4 + fight.stamina * 0.6)
