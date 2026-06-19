@@ -205,6 +205,9 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
             <meshStandardMaterial color="#2a2d33" roughness={0.97} />
           </mesh>
 
+          {/* Spinning-reel convention: the reel AND the guides ride on the
+              UNDERSIDE of the blank. Flip both to that side together. */}
+          <group rotation={[0, Math.PI, 0]}>
           {/* === spinning reel, hung beneath the seat (foot up, rotor up the blank) === */}
           <group position={[0, 0.235, 0]}>
             {/* reel foot / stem from the seat down to the body */}
@@ -298,6 +301,7 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
 
           {/* flexing blank (segment chain) */}
           {chain}
+          </group>
         </group>
       </group>
     </group>
