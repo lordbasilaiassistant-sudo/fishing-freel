@@ -214,7 +214,8 @@ function Scene() {
       <PerformanceMonitor />
       <AdaptiveDpr pixelated />
 
-      <Stats />
+      {/* FPS counter is a dev-only overlay — never ship it to players */}
+      {import.meta.env.DEV && <Stats />}
     </>
   )
 }
