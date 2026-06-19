@@ -63,9 +63,9 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
             <meshStandardMaterial color="#16171c" metalness={0.5} roughness={0.3} />
           </mesh>
           {i > 0 && (
-            <group position={[0, SEG_LEN * 0.5, guideR]}>
-              {/* guide standoff foot */}
-              <mesh position={[0, 0, -guideR * 0.5]}>
+            <group position={[0, SEG_LEN * 0.5, -guideR]}>
+              {/* guide standoff foot (points back up toward the blank) */}
+              <mesh position={[0, 0, guideR * 0.5]}>
                 <boxGeometry args={[0.004, 0.01, guideR]} />
                 <meshStandardMaterial color="#0b0c10" metalness={0.6} roughness={0.4} />
               </mesh>
@@ -205,10 +205,11 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
             <meshStandardMaterial color="#2a2d33" roughness={0.97} />
           </mesh>
 
-          {/* Spinning-reel convention: the reel AND the guides ride on the
-              UNDERSIDE of the blank. Flip both to that side together. */}
+          {/* === spinning reel, hung BENEATH the blank. Rotate the reel ALONE
+              (it has no per-frame bend); the blank chain is NOT wrapped so its
+              bend stays correct, and its guides are flipped to the underside
+              individually below. === */}
           <group rotation={[0, Math.PI, 0]}>
-          {/* === spinning reel, hung beneath the seat (foot up, rotor up the blank) === */}
           <group position={[0, 0.235, 0]}>
             {/* reel foot / stem from the seat down to the body */}
             <mesh position={[0, -0.006, 0.055]} rotation={[0.62, 0, 0]}>
@@ -298,10 +299,10 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
             {/* line exit at the line roller (line origin) */}
             <object3D ref={reelRef} position={[0.044, 0.074, 0.156]} />
           </group>
+          </group>
 
           {/* flexing blank (segment chain) */}
           {chain}
-          </group>
         </group>
       </group>
     </group>
