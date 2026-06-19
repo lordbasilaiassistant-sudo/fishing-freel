@@ -49,8 +49,8 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
       </group>
     )
     for (let i = SEGMENTS - 1; i >= 0; i--) {
-      const rTop = 0.02 - (0.02 - 0.004) * ((i + 1) / SEGMENTS)
-      const rBot = 0.02 - (0.02 - 0.004) * (i / SEGMENTS)
+      const rTop = 0.013 - (0.013 - 0.0032) * ((i + 1) / SEGMENTS)
+      const rBot = 0.013 - (0.013 - 0.0032) * (i / SEGMENTS)
       const guideR = 0.028 - 0.02 * (i / SEGMENTS) // line guides bigger near the butt
       node = (
         <group
@@ -141,8 +141,8 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
       if (s) s.rotation.x = -bend.current * weights[i]
     }
     if (body.current) body.current.rotation.x = tilt.current
-    if (spool.current) spool.current.rotation.y += spin
-    if (reelCrank.current) reelCrank.current.rotation.y += spin
+    if (spool.current) spool.current.rotation.y += spin // rotor whirls around the spool
+    if (reelCrank.current) reelCrank.current.rotation.x += spin * 1.6 // side crank turns
 
     // line spooled on the reel: full at rest, drops as the fish takes line,
     // climbs back as you reel in — a visible read on line off/on the spool.
@@ -163,64 +163,138 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
       <pointLight position={[0.3, 0.05, -0.4]} intensity={0.6} distance={2.8} decay={2} color="#fff2e0" />
       <group position={[0.5, -0.42, -0.85]} rotation={[-0.98, 0.14, 0.16]}>
         <group ref={body}>
-          {/* cork grip */}
+          {/* === split-grip handle: dark EVA foam + graphite reel seat, teal trim === */}
+          {/* rubber butt cap */}
+          <mesh position={[0, -0.012, 0]}>
+            <cylinderGeometry args={[0.04, 0.047, 0.03, 16]} />
+            <meshStandardMaterial color="#101216" roughness={0.85} />
+          </mesh>
+          {/* rear EVA grip */}
+          <mesh position={[0, 0.085, 0]}>
+            <cylinderGeometry args={[0.047, 0.05, 0.15, 20]} />
+            <meshStandardMaterial color="#2a2d33" roughness={0.97} />
+          </mesh>
+          {/* teal accent ring above the rear grip */}
+          <mesh position={[0, 0.168, 0]}>
+            <cylinderGeometry args={[0.04, 0.04, 0.012, 20]} />
+            <meshStandardMaterial color="#33c7bb" metalness={0.4} roughness={0.4} />
+          </mesh>
+          {/* graphite reel seat barrel (reel foot clamps to the underside) */}
+          <mesh position={[0, 0.235, 0]}>
+            <cylinderGeometry args={[0.031, 0.034, 0.12, 16]} />
+            <meshStandardMaterial color="#23262c" metalness={0.5} roughness={0.5} />
+          </mesh>
+          {/* knurled locking collar */}
           <mesh position={[0, 0.2, 0]}>
-            <cylinderGeometry args={[0.05, 0.045, 0.4, 16]} />
-            <meshStandardMaterial color="#c4924f" roughness={0.9} />
+            <cylinderGeometry args={[0.036, 0.036, 0.022, 24]} />
+            <meshStandardMaterial color="#3a4048" metalness={0.75} roughness={0.33} />
           </mesh>
-          {/* reel seat */}
-          <mesh position={[0, 0.4, 0]}>
-            <cylinderGeometry args={[0.04, 0.04, 0.1, 12]} />
-            <meshStandardMaterial color="#3a3f47" metalness={0.6} roughness={0.4} />
+          {/* hooded seat top (teal) */}
+          <mesh position={[0, 0.292, 0]}>
+            <cylinderGeometry args={[0.029, 0.034, 0.03, 16]} />
+            <meshStandardMaterial color="#33c7bb" metalness={0.45} roughness={0.4} />
           </mesh>
-          {/* reel foot / stem connecting the reel to the rod */}
-          <mesh position={[0, 0.42, 0.05]} rotation={[0.5, 0, 0]}>
-            <boxGeometry args={[0.03, 0.09, 0.02]} />
-            <meshStandardMaterial color="#3a4048" metalness={0.7} roughness={0.4} />
+          {/* teal trim below the foregrip */}
+          <mesh position={[0, 0.314, 0]}>
+            <cylinderGeometry args={[0.029, 0.029, 0.011, 20]} />
+            <meshStandardMaterial color="#33c7bb" metalness={0.4} roughness={0.4} />
           </mesh>
-          {/* reel slung under the rod */}
-          <group position={[0, 0.43, 0.1]} rotation={[Math.PI / 2, 0, 0]}>
-            {/* housing (static) */}
-            <mesh>
-              <cylinderGeometry args={[0.088, 0.088, 0.05, 24]} />
-              <meshStandardMaterial color="#525a66" metalness={0.78} roughness={0.28} />
-            </mesh>
-            {/* rotor ring around the spool (spinning-reel look) */}
-            <mesh position={[0, 0.028, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[0.078, 0.008, 10, 22]} />
-              <meshStandardMaterial color="#3a4048" metalness={0.8} roughness={0.3} />
-            </mesh>
-            {/* spinning spool assembly */}
-            <group ref={spool}>
-              <mesh position={[0, 0.032, 0]}>
-                <cylinderGeometry args={[0.095, 0.095, 0.012, 24]} />
-                <meshStandardMaterial color="#b3bbc7" metalness={0.85} roughness={0.25} />
-              </mesh>
-              <mesh position={[0, -0.032, 0]}>
-                <cylinderGeometry args={[0.095, 0.095, 0.012, 24]} />
-                <meshStandardMaterial color="#b3bbc7" metalness={0.85} roughness={0.25} />
-              </mesh>
-              {/* wound line — radius animates with line on/off the spool */}
-              <mesh ref={lineWrap}>
-                <cylinderGeometry args={[0.07, 0.07, 0.052, 24]} />
-                <meshStandardMaterial color="#e8dec2" roughness={0.7} metalness={0} />
-              </mesh>
-            </group>
-            {/* crank handle (spins while reeling) */}
-            <group ref={reelCrank} position={[0, 0.06, 0]}>
-              <mesh position={[0.06, 0, 0]}>
-                <boxGeometry args={[0.12, 0.014, 0.014]} />
-                <meshStandardMaterial color="#1b1d22" metalness={0.5} roughness={0.5} />
-              </mesh>
-              <mesh position={[0.12, 0, 0]}>
-                <sphereGeometry args={[0.022, 10, 10]} />
-                <meshStandardMaterial color="#101216" metalness={0.4} roughness={0.6} />
-              </mesh>
-            </group>
-          </group>
+          {/* fore EVA grip */}
+          <mesh position={[0, 0.372, 0]}>
+            <cylinderGeometry args={[0.027, 0.031, 0.1, 20]} />
+            <meshStandardMaterial color="#2a2d33" roughness={0.97} />
+          </mesh>
 
-          {/* line exit point off the reel (line origin) */}
-          <object3D ref={reelRef} position={[0, 0.5, 0.05]} />
+          {/* === spinning reel, hung beneath the seat (foot up, rotor up the blank) === */}
+          <group position={[0, 0.235, 0]}>
+            {/* reel foot / stem from the seat down to the body */}
+            <mesh position={[0, -0.006, 0.055]} rotation={[0.62, 0, 0]}>
+              <boxGeometry args={[0.022, 0.02, 0.11]} />
+              <meshStandardMaterial color="#3a4048" metalness={0.78} roughness={0.33} />
+            </mesh>
+
+            {/* gearbox body */}
+            <group position={[0, -0.02, 0.13]}>
+              <mesh>
+                <boxGeometry args={[0.05, 0.075, 0.092]} />
+                <meshStandardMaterial color="#33383f" metalness={0.72} roughness={0.32} />
+              </mesh>
+              {/* teal side plates */}
+              <mesh position={[0.0265, 0, 0]}>
+                <boxGeometry args={[0.006, 0.06, 0.08]} />
+                <meshStandardMaterial color="#2fbfb2" metalness={0.5} roughness={0.4} />
+              </mesh>
+              <mesh position={[-0.0265, 0, 0]}>
+                <boxGeometry args={[0.006, 0.06, 0.08]} />
+                <meshStandardMaterial color="#2fbfb2" metalness={0.5} roughness={0.4} />
+              </mesh>
+
+              {/* rotor + spool assembly (spins), projecting up the blank (+Y) */}
+              <group ref={spool} position={[0, 0.05, 0.012]}>
+                {/* rotor cup */}
+                <mesh position={[0, -0.004, 0]}>
+                  <cylinderGeometry args={[0.04, 0.044, 0.028, 24]} />
+                  <meshStandardMaterial color="#3a4048" metalness={0.8} roughness={0.3} />
+                </mesh>
+                {/* lower spool flange */}
+                <mesh position={[0, 0.014, 0]}>
+                  <cylinderGeometry args={[0.038, 0.038, 0.006, 24]} />
+                  <meshStandardMaterial color="#b9c0cc" metalness={0.85} roughness={0.25} />
+                </mesh>
+                {/* wound line — radius animates with line on/off the spool */}
+                <mesh ref={lineWrap} position={[0, 0.032, 0]}>
+                  <cylinderGeometry args={[0.028, 0.028, 0.04, 24]} />
+                  <meshStandardMaterial color="#e8dec2" roughness={0.7} />
+                </mesh>
+                {/* upper flange + teal drag knob cap */}
+                <mesh position={[0, 0.054, 0]}>
+                  <cylinderGeometry args={[0.038, 0.035, 0.007, 24]} />
+                  <meshStandardMaterial color="#b9c0cc" metalness={0.85} roughness={0.25} />
+                </mesh>
+                <mesh position={[0, 0.062, 0]}>
+                  <cylinderGeometry args={[0.026, 0.029, 0.008, 18]} />
+                  <meshStandardMaterial color="#2fbfb2" metalness={0.5} roughness={0.4} />
+                </mesh>
+                {/* open bail wire arcing over the spool (the signature spinning-reel arm) */}
+                <mesh position={[0, 0.028, 0]} rotation={[0.35, 0.3, 0]}>
+                  <torusGeometry args={[0.05, 0.005, 8, 28, Math.PI * 1.25]} />
+                  <meshStandardMaterial color="#0e1014" metalness={0.9} roughness={0.28} />
+                </mesh>
+                {/* bail arm shoulder where it pivots off the rotor */}
+                <mesh position={[-0.046, 0.012, 0.01]} rotation={[0, 0, 0.5]}>
+                  <cylinderGeometry args={[0.007, 0.009, 0.018, 10]} />
+                  <meshStandardMaterial color="#2a2e34" metalness={0.8} roughness={0.32} />
+                </mesh>
+                {/* line roller at the bail tip */}
+                <mesh position={[0.044, 0.044, 0.014]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.0065, 0.0065, 0.011, 10]} />
+                  <meshStandardMaterial color="#5fe3d6" metalness={0.7} roughness={0.3} />
+                </mesh>
+              </group>
+
+              {/* crank handle on the side (spins while reeling, around the side axis) */}
+              <group ref={reelCrank} position={[-0.03, -0.012, 0]}>
+                {/* hub out the side */}
+                <mesh rotation={[0, 0, Math.PI / 2]}>
+                  <cylinderGeometry args={[0.01, 0.011, 0.028, 12]} />
+                  <meshStandardMaterial color="#2a2e34" metalness={0.7} roughness={0.4} />
+                </mesh>
+                {/* crank arm */}
+                <mesh position={[-0.018, 0.032, 0]}>
+                  <boxGeometry args={[0.012, 0.075, 0.012]} />
+                  <meshStandardMaterial color="#16181d" metalness={0.6} roughness={0.45} />
+                </mesh>
+                {/* T-knob */}
+                <mesh position={[-0.018, 0.07, 0]} rotation={[Math.PI / 2, 0, 0]}>
+                  <cylinderGeometry args={[0.013, 0.013, 0.03, 14]} />
+                  <meshStandardMaterial color="#2fbfb2" metalness={0.45} roughness={0.45} />
+                </mesh>
+              </group>
+            </group>
+
+            {/* line exit at the line roller (line origin) */}
+            <object3D ref={reelRef} position={[0.044, 0.074, 0.156]} />
+          </group>
 
           {/* flexing blank (segment chain) */}
           {chain}
