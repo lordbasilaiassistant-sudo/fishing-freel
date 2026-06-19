@@ -26,6 +26,7 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
   const lineFrac = useRef(1)
   const segs = useRef([])
   const bend = useRef(0)
+  const bendVel = useRef(0) // for the under-damped spring (tip ring-out)
   const tilt = useRef(0)
   const castT = useRef(0)
 
@@ -110,9 +111,11 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
       case PHASES.CASTING: {
         castT.current += dt
         const ct = castT.current
-        if (ct < 0.05) directBend = -0.55
-        else if (ct < 0.16) directBend = -0.55 + ((ct - 0.05) / 0.11) * 1.5
-        else directBend = 0.95 + Math.min((ct - 0.16) / 0.5, 1) * (0.08 - 0.95)
+        targetBend = 0.1 // the spring rings out toward this after the whip hand-off
+        if (ct < 0.05) directBend = -0.55 // load the rod back
+        else if (ct < 0.14) directBend = -0.55 + ((ct - 0.05) / 0.09) * 1.5 // whip forward to +0.95
+        else if (ct < 0.2) directBend = 0.95 - ((ct - 0.14) / 0.06) * 0.55 // ease off the peak
+        // ct >= 0.2: directBend stays null -> spring catches the motion and the tip rings
         break
       }
       case PHASES.WAITING:
@@ -131,14 +134,33 @@ export function FishingRod({ tipRef, reelRef, guideRefs }) {
         break
     }
 
-    if (directBend !== null) bend.current = directBend
-    else bend.current += (targetBend - bend.current) * Math.min(1, dt * 10)
+    if (directBend !== null) {
+      // scripted segment (the cast whip): track velocity so the spring picks the
+      // motion up seamlessly and the tip rings out on hand-off.
+      bendVel.current = (directBend - bend.current) / Math.max(dt, 1e-4)
+      bend.current = directBend
+    } else {
+      // under-damped spring: the tip overshoots and "twangs" on every load
+      // release (cast hand-off, hookset, jump slack) instead of a dead lerp.
+      const OMEGA = 16
+      const ZETA = 0.4
+      const accel = OMEGA * OMEGA * (targetBend - bend.current) - 2 * ZETA * OMEGA * bendVel.current
+      bendVel.current += accel * dt
+      bend.current += bendVel.current * dt
+    }
     tilt.current += (targetTilt - tilt.current) * Math.min(1, dt * 9)
+
+    // head-shake wobble layered on top (outside the spring so it stays crisp)
+    // when a strong fish is loading the rod during the fight.
+    let applied = bend.current
+    if (g.phase === PHASES.REELING) {
+      applied += Math.sin(t * 34) * 0.05 * Math.max(0, g.tension - 0.45)
+    }
 
     // distribute the total bend across the chain (flip: +bend bows toward lure)
     for (let i = 0; i < SEGMENTS; i++) {
       const s = segs.current[i]
-      if (s) s.rotation.x = -bend.current * weights[i]
+      if (s) s.rotation.x = -applied * weights[i]
     }
     if (body.current) body.current.rotation.x = tilt.current
     if (spool.current) spool.current.rotation.y += spin // rotor whirls around the spool
