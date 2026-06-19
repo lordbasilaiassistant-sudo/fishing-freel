@@ -241,7 +241,7 @@ export function startFight(playerX, playerZ) {
     tension: 0.18, stamina: 1, maxTension: 0.18,
     behavior: FIGHT.RUN, timer: 0.6,
     vx: 0, vz: 0, vy: 0, threw: false, justJumped: false,
-    slipping: false, spooled: false,
+    slipping: false, spooled: false, slipSpike: 0,
   }
 }
 
@@ -331,8 +331,11 @@ export function updateFight(dt, t, playerX, playerZ, reeling, pumping, rodLoad, 
 
   let pull = 0
   if (demand > dragMax) {
-    // drag SLIPS: line pays out, tension pinned at the drag setting (line safe)
-    fight.tension = dragMax
+    // drag SLIPS: line pays out. A break-away spike on the FIRST frame of slip
+    // makes the run "lurch then buzz" instead of humming flat — felt as a jolt,
+    // but capped below the snap threshold so the drag still protects the line.
+    if (!fight.slipping) fight.slipSpike = 0.18
+    fight.tension = Math.min(dragMax + fight.slipSpike, tackle.lineStrength - 0.02)
     fight.tether += dt * (demand - dragMax) * 4.5
     fight.slipping = true
   } else {
@@ -342,6 +345,7 @@ export function updateFight(dt, t, playerX, playerZ, reeling, pumping, rodLoad, 
     if (reeling) pull += dt * (1.4 + (1 - sp.strength) * 0.8 + lp * 0.5) // reel gear ratio + rod/hook power
     if (pumping) pull += dt * (0.6 + rodLoad * 1.4 + lp * 0.3)
   }
+  fight.slipSpike = Math.max(0, fight.slipSpike - dt / 0.15) // spike decays over ~150 ms
   fight.tether = Math.max(0, fight.tether - pull)
 
   // stamina: tires while fighting the drag or being worked; recovers on slack
