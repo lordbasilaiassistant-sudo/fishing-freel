@@ -12,6 +12,8 @@ const TABS = [
   { key: 'lure', label: 'Lures', slot: 'bait', list: CATALOG.lures },
   { key: 'bait', label: 'Baits', slot: 'bait', list: CATALOG.baits },
   { key: 'holder', label: 'Holders', slot: 'holder', list: CATALOG.holders },
+  { key: 'glasses', label: 'Glasses', slot: 'glasses', list: CATALOG.glasses },
+  { key: 'hat', label: 'Hats', slot: 'hat', list: CATALOG.hats },
 ]
 const FIGHT_PHASES = [PHASES.AIMING, PHASES.CASTING, PHASES.BITE, PHASES.REELING]
 

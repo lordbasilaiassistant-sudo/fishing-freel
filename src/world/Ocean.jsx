@@ -17,6 +17,7 @@ export function Ocean({
   distortionScale = 2.6,
   waveScale = 3,
   size = 4000,
+  polarized = 0, // 0..1 — polarized eyewear cuts surface glare to reveal fish
 }) {
   const normals = useLoader(
     THREE.TextureLoader,
@@ -45,12 +46,16 @@ export function Ocean({
   }, [normals, size])
 
   // Live-tune color/distortion/wave-density from leva without rebuilding the mesh.
+  // Polarized eyewear kills the blinding sun-specular glitter and calms the
+  // chop so cruising fish stop hiding behind glare/reflection.
   useMemo(() => {
     const u = water.material.uniforms
+    const glareCut = 1 - 0.9 * polarized // dim the sun hotspot
     u.waterColor.value.set(waterColor)
-    u.distortionScale.value = distortionScale
+    u.sunColor.value.setRGB(glareCut, glareCut, glareCut)
+    u.distortionScale.value = distortionScale * (1 - 0.5 * polarized)
     u.size.value = waveScale // higher = smaller, more detailed ripples
-  }, [water, waterColor, distortionScale, waveScale])
+  }, [water, waterColor, distortionScale, waveScale, polarized])
 
   useFrame((_, dt) => {
     const u = water.material.uniforms

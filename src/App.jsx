@@ -44,10 +44,33 @@ export default function App() {
       <Settings />
       <MapPanel />
       <AnglerLog />
+      <PolarizedTint />
       {/* dev-only tuning panel, hidden from players (flip to false to tune) */}
       <Leva hidden />
       <Loader />
     </>
+  )
+}
+
+// Subtle full-screen lens tint while polarized eyewear is equipped — sells the
+// "shades on" read and lifts perceived contrast without washing out the scene.
+// Strongest at the top of the frame, where sky glare lives.
+function PolarizedTint() {
+  const polarized = useGame((s) => s.tackle.polarized || 0)
+  if (polarized <= 0) return null
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 5,
+        background:
+          'linear-gradient(to bottom, rgba(28,38,46,0.22), rgba(28,38,46,0.05) 45%, rgba(20,30,28,0.10))',
+        opacity: Math.min(1, 0.35 + polarized * 0.65),
+      }}
+    />
   )
 }
 
@@ -111,6 +134,8 @@ function Scene() {
   const skyRef = useRef()
   const hemiRef = useRef()
 
+  const polarized = useGame((s) => s.tackle.polarized || 0) // equipped sunglasses/brim
+
   const { waterColor, distortion, waveScale } = useControls('Water', {
     waterColor: '#1f4a55',
     distortion: { value: 3.2, min: 0, max: 8, step: 0.1 },
@@ -160,6 +185,7 @@ function Scene() {
           waterColor={waterColor}
           distortionScale={distortion}
           waveScale={waveScale}
+          polarized={polarized}
         />
         <Terrain />
         <Dock />

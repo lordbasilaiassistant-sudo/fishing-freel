@@ -2,7 +2,7 @@
 // and normalized `derived` stats. computeTackle() flattens the equipped
 // line + reel into the {name,lineStrength,drag,lineCapacity} object the fight
 // already consumes — so the casting system needs no structural changes.
-export const SLOTS = ['rod', 'reel', 'line', 'hook', 'bait', 'holder']
+export const SLOTS = ['rod', 'reel', 'line', 'hook', 'bait', 'holder', 'glasses', 'hat']
 
 export const CATALOG = {
   rods: [
@@ -80,6 +80,22 @@ export const CATALOG = {
     { id: 'holder_dual', slot: 'holder', name: 'Freestanding Dual Holder', tier: 'gold', unlockLevel: 13, price: 130, specs: { slots: 2 }, derived: {}, blurb: 'Two rods.' },
     { id: 'holder_station', slot: 'holder', name: '3-Rod Bank Station', tier: 'platinum', unlockLevel: 17, price: 280, specs: { slots: 3 }, derived: {}, blurb: 'Three lines, buzzers.' },
   ],
+  // Polarized lenses cut the horizontal glare bouncing off the surface, killing
+  // the sun glitter + sky reflection that washes out fish — so a higher
+  // `polarized` value makes cruising fish easier to spot (see computeTackle ->
+  // App passes it to the water shader).
+  glasses: [
+    { id: 'glass_amber', slot: 'glasses', name: 'Amber Polarized', tier: 'starter', unlockLevel: 2, price: 40, specs: { lens: 'amber', polarized: true }, derived: { polarized: 0.5 }, blurb: 'Cuts glare, pops contrast in low light.' },
+    { id: 'glass_grey', slot: 'glasses', name: 'Grey Polarized', tier: 'bronze', unlockLevel: 6, price: 95, specs: { lens: 'grey', polarized: true }, derived: { polarized: 0.7 }, blurb: 'All-day glare killer for bright sun.' },
+    { id: 'glass_copper', slot: 'glasses', name: 'Copper Mirror Polarized', tier: 'silver', unlockLevel: 10, price: 185, specs: { lens: 'copper mirror', polarized: true }, derived: { polarized: 0.85 }, blurb: 'High-contrast — sight-fish the shallows.' },
+    { id: 'glass_pro', slot: 'glasses', name: 'Pro Sight-Caster Polarized', tier: 'gold', unlockLevel: 15, price: 340, specs: { lens: 'blue mirror', polarized: true }, derived: { polarized: 1.0 }, blurb: 'See every fish on the flat.' },
+  ],
+  hats: [
+    { id: 'hat_cap', slot: 'hat', name: 'Cotton Ball Cap', tier: 'starter', unlockLevel: 1, price: 15, specs: { brim: 'curved' }, derived: {}, blurb: 'Classic. Keeps the sun off.' },
+    { id: 'hat_trucker', slot: 'hat', name: 'Mesh Trucker', tier: 'starter', unlockLevel: 3, price: 22, specs: { brim: 'flat' }, derived: {}, blurb: 'Breathable. Looks the part.' },
+    { id: 'hat_straw', slot: 'hat', name: 'Wide-Brim Straw', tier: 'bronze', unlockLevel: 7, price: 38, specs: { brim: 'wide' }, derived: { polarized: 0.12 }, blurb: 'Wide brim shades the water a touch.' },
+    { id: 'hat_boonie', slot: 'hat', name: 'Boonie Sun Hat', tier: 'silver', unlockLevel: 11, price: 60, specs: { brim: 'full' }, derived: { polarized: 0.12 }, blurb: 'Full shade — stacks with polarized lenses.' },
+  ],
 }
 
 export const STARTER_OWNED = ['rod_cane', 'reel_1000', 'line_mono4', 'hook_aberdeen10', 'bait_worm', 'holder_forked']
@@ -101,6 +117,8 @@ export function computeTackle(loadout) {
   const line = itemById(loadout.line)
   const hook = itemById(loadout.hook)
   const bait = itemById(loadout.bait)
+  const glasses = itemById(loadout.glasses)
+  const hat = itemById(loadout.hat)
   return {
     name: `${line?.name || '?'} · ${reel?.name || '?'}`,
     lineStrength: line?.derived.lineStrength ?? 0.92,
@@ -110,6 +128,9 @@ export function computeTackle(loadout) {
     landingPower: (rod?.derived.landingPower ?? 0.35) + (hook?.derived.landingPower ?? 0.2), // reel-in muscle + hookset
     castDistance: rod?.derived.castDistance ?? 0.4, // how far the rod casts
     attract: bait?.derived.attract ?? 0.4, // lure/bait appeal
+    // polarized lenses (+ a wide brim) cut surface glare so fish are easier to
+    // spot; 0 = none, 1 = full. Drives the water shader's glare/reflection.
+    polarized: Math.min(1, (glasses?.derived.polarized ?? 0) + (hat?.derived.polarized ?? 0)),
   }
 }
 export function equippedToken(loadout) {
