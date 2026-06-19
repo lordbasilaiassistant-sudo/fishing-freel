@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { useGame, PHASES } from '../state/useGame.js'
-import { castSim, resetCast } from '../sim/cast.js'
+import { castSim, resetCast, triggerSplash } from '../sim/cast.js'
 import { lake, fishToData, releaseActive, startFight, updateFight, FS } from '../sim/lake.js'
 import { heightAt } from '../world/terrainHeight.js'
 import { sellValue } from './fish.js'
@@ -213,6 +213,7 @@ export function CastingSystem({ tipRef }) {
           if (gh < -0.05) {
             castSim.inWater = true // real water → fish can bite
             sfx.splash()
+            triggerSplash(castSim.landX, castSim.landZ, 1)
             g.setPhase(PHASES.WAITING)
           } else {
             castSim.inWater = false // on the bank → no fishing, reel it in
@@ -312,8 +313,11 @@ export function CastingSystem({ tipRef }) {
         const lineOut = Math.max(0, Math.min(1, fight.distance / fight.maxDist))
         g.patch({ tension: fight.tension, fishDistance: lineOut, fishStamina: fight.stamina, rodLoad, reeling: reelingNow })
 
-        // fight audio: jump splashes, drag-slip ratchet, reel clicks
-        if (fight.justJumped) sfx.bigSplash()
+        // fight audio + spray: jump splashes, drag-slip ratchet, reel clicks
+        if (fight.justJumped) {
+          sfx.bigSplash()
+          triggerSplash(lake.active.pos.x, lake.active.pos.z, 1.7)
+        }
         if (fight.slipping) sfx.reelTick(dt, true)
         else if (reelingNow) sfx.reelTick(dt, false)
 

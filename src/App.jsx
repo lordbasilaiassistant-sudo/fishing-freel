@@ -21,6 +21,7 @@ import { FishingRod } from './player/FishingRod.jsx'
 import { CastingSystem } from './fishing/CastingSystem.jsx'
 import { Bobber } from './fishing/Bobber.jsx'
 import { FishSchool } from './fishing/FishSchool.jsx'
+import { SplashFX } from './fishing/SplashFX.jsx'
 import { Hud } from './ui/Hud.jsx'
 import { Bench } from './ui/Bench.jsx'
 import { Settings } from './ui/Settings.jsx'
@@ -197,6 +198,7 @@ function Scene() {
       <CastingSystem tipRef={tipRef} />
       <Bobber tipRef={tipRef} reelRef={reelRef} guideRefs={guideRefs} />
       <FishSchool />
+      <SplashFX />
 
       <EffectComposer multisampling={0} disableNormalPass>
         <Bloom

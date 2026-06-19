@@ -16,6 +16,17 @@ export const castSim = {
   attract: 0.5, // lure/bait appeal multiplier on bite chance
   landX: 0,
   landZ: 0,
+  // one-shot splash event marker — bump `id` to fire a droplet burst at (x,z).
+  splash: { id: 0, x: 0, z: 0, power: 1 },
+}
+
+// Fire a splash burst (consumed by the SplashFX renderer). power scales the
+// droplet count + spread (cast plop ~1, a jumping fish ~1.6).
+export function triggerSplash(x, z, power = 1) {
+  castSim.splash.id++
+  castSim.splash.x = x
+  castSim.splash.z = z
+  castSim.splash.power = power
 }
 
 export function resetCast() {
