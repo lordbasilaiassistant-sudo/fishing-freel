@@ -1,0 +1,47 @@
+{
+  "name": "fishing-freel",
+  "version": "1.0.0",
+  "description": "A beautiful, browser-based 3D first-person fishing game built with React Three Fiber and Three.js.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "fishing",
+    "game",
+    "3d",
+    "webgl",
+    "three.js",
+    "react-three-fiber",
+    "r3f",
+    "browser-game",
+    "vite"
+  ],
+  "author": "Anthony Snider",
+  "license": "MIT",
+  "homepage": "https://github.com/lordbasilaiassistant-sudo/fishing-freel#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lordbasilaiassistant-sudo/fishing-freel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lordbasilaiassistant-sudo/fishing-freel/issues"
+  },
+  "type": "module",
+  "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
+    "@react-three/postprocessing": "^3.0.4",
+    "@react-three/rapier": "^2.2.0",
+    "leva": "^0.10.1",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "three": "^0.184.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "vite": "^8.0.16"
+  }
+}
