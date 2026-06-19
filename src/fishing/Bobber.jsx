@@ -5,6 +5,9 @@ import { castSim } from '../sim/cast.js'
 import { useGame, PHASES } from '../state/useGame.js'
 
 const _v = new THREE.Vector3()
+const _tipW = new THREE.Vector3()
+const _seg = new THREE.Vector3()
+const CAT_SEGS = 7 // catenary samples between rod tip and lure
 
 /**
  * Renders the lure/bobber, the fishing line, and the splashdown ripple. The
@@ -39,8 +42,25 @@ export function Bobber({ tipRef, reelRef, guideRefs }) {
       for (let i = 1; i < guides.length; i++) {
         if (guides[i]) push(guides[i].getWorldPosition(_v))
       }
-      push(tipRef.current.getWorldPosition(_v))
-      if (castSim.active) push(castSim.bobber) // run on out to the lure
+      tipRef.current.getWorldPosition(_tipW)
+      push(_tipW)
+
+      if (castSim.active) {
+        // tip -> lure with a gravity belly: slack line sags, a taut/fighting
+        // line pulls straight. sag = how much more line is out than the straight
+        // gap, eased by tension while a fish is on.
+        const dist = _tipW.distanceTo(castSim.bobber)
+        let sag = Math.min(Math.max(0, castSim.lineLen - dist) * 0.5, dist * 0.3)
+        const st = useGame.getState()
+        if (st.phase === PHASES.REELING) sag *= 1 - 0.85 * st.tension
+        for (let i = 1; i < CAT_SEGS; i++) {
+          const t = i / CAT_SEGS
+          _seg.lerpVectors(_tipW, castSim.bobber, t)
+          _seg.y -= sag * 4 * t * (1 - t) // parabolic droop, max at mid-span
+          push(_seg)
+        }
+        push(castSim.bobber)
+      }
 
       p.needsUpdate = true
       line.current.geometry.setDrawRange(0, n)
@@ -80,8 +100,8 @@ export function Bobber({ tipRef, reelRef, guideRefs }) {
 
       <line ref={line} frustumCulled={false} visible={false}>
         <bufferGeometry>
-          {/* reel + up to ~7 guides + tip + lure; drawRange set per frame */}
-          <bufferAttribute attach="attributes-position" args={[new Float32Array(48), 3]} />
+          {/* reel + ~7 guides + tip + catenary samples + lure; drawRange per frame */}
+          <bufferAttribute attach="attributes-position" args={[new Float32Array(96), 3]} />
         </bufferGeometry>
         <lineBasicMaterial color="#eef3f5" transparent opacity={0.55} />
       </line>
