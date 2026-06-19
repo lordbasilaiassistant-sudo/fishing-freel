@@ -4,8 +4,7 @@
 
 Cast off a dock on a calm lake at golden hour, work the lure, feel the bite, and fight the fish through a real tension/drag loop. Built with React Three Fiber and Three.js, deployable as a static site to GitHub Pages, Cloudflare Pages, Render, or any static host.
 
-<!-- Add a screenshot or GIF here once captured: -->
-<!-- ![FishingF'reel](docs/screenshot.png) -->
+![FishingF'reel — golden hour on the dock](public/screenshot.jpg)
 
 ---
 
