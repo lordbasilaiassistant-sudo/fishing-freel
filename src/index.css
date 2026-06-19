@@ -1,3 +1,45 @@
+:root {
+  /* brand + status */
+  --teal: #54e0cf;
+  --teal-2: #2bc4ad;
+  --teal-ink: #04140f;
+  --gold: #ffce5a;
+  --gold-ink: #2a1f00;
+  --danger: #ff7d5e;
+
+  /* text */
+  --ink: #eaf2f3;
+  --ink-dim: #9fb2b8;
+  --ink-faint: #6f828a;
+
+  /* type */
+  --font-display: "Sora", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-ui: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* radii */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+
+  /* glass material — layered fill, fine top highlight, soft deep shadow */
+  --panel-bg: linear-gradient(180deg, rgba(22, 32, 39, 0.82), rgba(9, 15, 20, 0.88));
+  --panel-bd: rgba(255, 255, 255, 0.1);
+  --panel-hi: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --panel-sh: 0 12px 34px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --blur: saturate(135%) blur(10px);
+
+  /* HUD chips */
+  --chip-bg: linear-gradient(180deg, rgba(18, 27, 33, 0.74), rgba(8, 13, 17, 0.8));
+
+  /* tier rarities */
+  --t-starter: #8a98a0;
+  --t-bronze: #cd824f;
+  --t-silver: #c6d2dd;
+  --t-gold: #ffce5a;
+  --t-platinum: #56e2d8;
+  --t-legendary: #c684ff;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -14,12 +56,25 @@ body,
 }
 
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  color: #f2f5f7;
+  font-family: var(--font-ui);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 canvas {
   display: block;
   touch-action: none;
+}
+
+/* tabular, lining figures everywhere numbers matter in the HUD */
+.lvl-badge,
+.money-badge,
+.xp-text,
+.bench-money,
+.bc-price,
+.set-val,
+.clock-chip,
+.tackle-chip {
+  font-variant-numeric: tabular-nums lining-nums;
 }
