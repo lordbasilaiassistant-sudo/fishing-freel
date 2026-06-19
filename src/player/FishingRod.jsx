@@ -16,7 +16,7 @@ const SEG_LEN = BLANK_LEN / SEGMENTS
  * Convention: bend > 0 bows the tip TOWARD the lure (forward/down); bend < 0
  * loads the rod back. tipRef sits at the end of the last segment (line origin).
  */
-export function FishingRod({ tipRef, reelRef }) {
+export function FishingRod({ tipRef, reelRef, guideRefs }) {
   const camera = useThree((s) => s.camera)
   const rig = useRef()
   const body = useRef()
@@ -74,6 +74,8 @@ export function FishingRod({ tipRef, reelRef }) {
                 <torusGeometry args={[guideR * 0.5, 0.0028, 6, 12]} />
                 <meshStandardMaterial color="#0b0c10" metalness={0.85} roughness={0.25} />
               </mesh>
+              {/* ring center — the line threads through this point */}
+              <object3D ref={(el) => (guideRefs.current[i] = el)} />
             </group>
           )}
           {node}
@@ -81,7 +83,7 @@ export function FishingRod({ tipRef, reelRef }) {
       )
     }
     return node
-  }, [tipRef, weights])
+  }, [tipRef, weights, guideRefs])
 
   useFrame((state, dtRaw) => {
     const dt = Math.min(dtRaw, 0.05)

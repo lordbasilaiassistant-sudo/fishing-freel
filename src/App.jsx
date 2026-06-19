@@ -105,6 +105,7 @@ function TimeSystem({ sunLight, skyRef, hemiRef }) {
 function Scene() {
   const tipRef = useRef()
   const reelRef = useRef()
+  const guideRefs = useRef([]) // line-guide ring centers, butt→tip (filled by FishingRod)
 
   const sunLight = useRef()
   const skyRef = useRef()
@@ -166,9 +167,9 @@ function Scene() {
 
       <Player start={[0, 72]} />
       <FovRig />
-      <FishingRod tipRef={tipRef} reelRef={reelRef} />
+      <FishingRod tipRef={tipRef} reelRef={reelRef} guideRefs={guideRefs} />
       <CastingSystem tipRef={tipRef} />
-      <Bobber tipRef={tipRef} reelRef={reelRef} />
+      <Bobber tipRef={tipRef} reelRef={reelRef} guideRefs={guideRefs} />
       <FishSchool />
 
       <EffectComposer multisampling={0} disableNormalPass>

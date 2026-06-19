@@ -4,16 +4,16 @@ import * as THREE from 'three'
 import { castSim } from '../sim/cast.js'
 import { useGame, PHASES } from '../state/useGame.js'
 
-const _tip = new THREE.Vector3()
-const _reel = new THREE.Vector3()
+const _v = new THREE.Vector3()
 
 /**
  * Renders the lure/bobber, the fishing line, and the splashdown ripple. The
- * line is a 3-point poly: reel -> rod tip -> lure, so it reads as line coming
- * off the reel and up the rod (not just spawning at the tip). Always shows the
- * reel->tip run; extends to the lure while a cast is out.
+ * line is threaded through the rod hardware: reel -> each guide ring -> rod tip
+ * -> lure, so it follows the blank (and its bend) the way real line runs through
+ * the eyelets, instead of cutting straight from the reel to the tip. Always
+ * shows the strung reel->guides->tip run; extends to the lure while a cast is out.
  */
-export function Bobber({ tipRef, reelRef }) {
+export function Bobber({ tipRef, reelRef, guideRefs }) {
   const bob = useRef()
   const line = useRef()
   const ripple = useRef()
@@ -27,16 +27,23 @@ export function Bobber({ tipRef, reelRef }) {
       bob.current.visible = castSim.active && !landed
     }
 
-    // line: reel -> rod tip -> lure
+    // line: reel -> each guide ring -> rod tip -> lure
     if (line.current && tipRef.current && reelRef.current) {
-      reelRef.current.getWorldPosition(_reel)
-      tipRef.current.getWorldPosition(_tip)
       const p = line.current.geometry.attributes.position
-      p.setXYZ(0, _reel.x, _reel.y, _reel.z)
-      p.setXYZ(1, _tip.x, _tip.y, _tip.z)
-      if (castSim.active) p.setXYZ(2, castSim.bobber.x, castSim.bobber.y, castSim.bobber.z)
-      else p.setXYZ(2, _tip.x, _tip.y, _tip.z)
+      let n = 0
+      const push = (v) => p.setXYZ(n++, v.x, v.y, v.z)
+
+      reelRef.current.getWorldPosition(_v)
+      push(_v)
+      const guides = guideRefs?.current || []
+      for (let i = 1; i < guides.length; i++) {
+        if (guides[i]) push(guides[i].getWorldPosition(_v))
+      }
+      push(tipRef.current.getWorldPosition(_v))
+      if (castSim.active) push(castSim.bobber) // run on out to the lure
+
       p.needsUpdate = true
+      line.current.geometry.setDrawRange(0, n)
       line.current.visible = !landed
     }
 
@@ -73,7 +80,8 @@ export function Bobber({ tipRef, reelRef }) {
 
       <line ref={line} frustumCulled={false} visible={false}>
         <bufferGeometry>
-          <bufferAttribute attach="attributes-position" args={[new Float32Array(9), 3]} />
+          {/* reel + up to ~7 guides + tip + lure; drawRange set per frame */}
+          <bufferAttribute attach="attributes-position" args={[new Float32Array(48), 3]} />
         </bufferGeometry>
         <lineBasicMaterial color="#eef3f5" transparent opacity={0.55} />
       </line>
